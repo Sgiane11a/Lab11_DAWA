@@ -20,22 +20,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Alert } from "@/components/ui/alert"
+import { Calendar } from "@/components/ui/calendar"
 
-export function ProjectForm() {
+export function ProjectForm({ onCreate }: { onCreate?: (project: any) => void }) {
   const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     category: "",
     priority: "",
+    startDate: "",
+    members: "",
   })
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    
-    // Limpiar y cerrar
-    setFormData({ name: "", description: "", category: "", priority: "" })
+    // Validaciones simples
+    if (!formData.name.trim()) {
+      setError("El nombre del proyecto es obligatorio")
+      return
+    }
+    if (!formData.category) {
+      setError("Selecciona una categoría")
+      return
+    }
+    if (!formData.priority) {
+      setError("Selecciona la prioridad")
+      return
+    }
+
+    // Simular guardado exitoso
+    setError(null)
+    const membersArray = formData.members
+      .split(",")
+      .map((m) => m.trim())
+      .filter(Boolean)
+
+    const newProject = {
+      id: Date.now(),
+      title: formData.name,
+      description: formData.description,
+      status: "Planificado",
+      progress: 0,
+      team: membersArray.length,
+      members: membersArray,
+      category: formData.category,
+      priority: formData.priority,
+      startDate: formData.startDate,
+    }
+
+    onCreate?.(newProject)
+
+    setFormData({ name: "", description: "", category: "", priority: "", startDate: "", members: "" })
     setOpen(false)
   }
 
@@ -68,6 +106,7 @@ export function ProjectForm() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {error ? <Alert title="Error" description={error} variant="destructive" /> : null}
             <div className="grid gap-2">
               <Label htmlFor="name">
                 Nombre del Proyecto <span className="text-red-500">*</span>
@@ -129,6 +168,22 @@ export function ProjectForm() {
                   <SelectItem value="urgent">Urgente</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="startDate">Fecha de inicio</Label>
+              <Calendar value={formData.startDate} onChange={(v) => setFormData({ ...formData, startDate: v })} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="members">Miembros del equipo</Label>
+              <Input
+                id="members"
+                placeholder="María García, Juan Pérez"
+                value={formData.members}
+                onChange={(e) => setFormData({ ...formData, members: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">Sepáralos por comas</p>
             </div>
           </div>
           <DialogFooter>
